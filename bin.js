@@ -33,7 +33,7 @@ com
 
 com
   .command('parse')
-  .description('Parse a vocabulary list.')
+  .description('parse a vocabulary list in csv format')
   .action(() => {
     readVocab()
       .then(deutschParse.parse)
@@ -42,11 +42,21 @@ com
 
 com
   .command('acc')
-  .description('Generate exercises to practice accusative articles.')
+  .description('accusative')
   .option('-n, --number <n>', 'Number of exercises to generate.')
   .action(() => {
     readVocab()
       .then(lodash.flow(deutschParse.accusative, toCSV))
+      .then(console.log, console.error)
+  })
+
+com
+  .command('sub')
+  .description('subordinate clauses')
+  .option('-n, --number <n>', 'Number of exercises to generate.')
+  .action(() => {
+    readVocab()
+      .then(lodash.flow(deutschParse.subordinate, toCSV))
       .then(console.log, console.error)
   })
 
