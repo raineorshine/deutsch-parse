@@ -4,7 +4,7 @@ const com = require('commander')
 const stdin = require('get-stdin-promise')
 const pkg = require('./package.json')
 const lodash = require('lodash')
-const deutschParse = require('./')
+const satz = require('./')
 
 const extendedHelp = `
 
@@ -40,7 +40,7 @@ com
   .description('parse a vocabulary list in csv format')
   .action(() => {
     readVocab()
-      .then(deutschParse.parse)
+      .then(satz.parse)
       .then(console.log, console.error)
   })
 
@@ -50,7 +50,7 @@ com
   .option('-n, --number <n>', 'Number of exercises to generate.')
   .action(() => {
     readVocab()
-      .then(lodash.flow(deutschParse.accusative, toCSV))
+      .then(lodash.flow(satz.accusative, toCSV))
       .then(console.log, console.error)
   })
 
@@ -60,7 +60,7 @@ com
   .option('-n, --number <n>', 'Number of exercises to generate.')
   .action(() => {
     readVocab()
-      .then(lodash.flow(deutschParse.subordinate, toCSV))
+      .then(lodash.flow(satz.subordinate, toCSV))
       .then(console.log, console.error)
   })
 

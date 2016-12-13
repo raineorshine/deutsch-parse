@@ -1,5 +1,5 @@
 const chai = require('chai')
-const deutschParse = require('../index.js')
+const satz = require('../index.js')
 const should = chai.should()
 
 const sample = `
@@ -13,32 +13,32 @@ indoors,drinnen,,,,,,,,,,,,,,,
 "oneEn, twoEn","die oneDe, die twoDe"
 `
 
-describe('deutsch-parse', () => {
+describe('satz', () => {
 
   it('should parse a vocab list', () => {
-    deutschParse.parse(sample).should.deep.equal([
-      { en: 'attack', de: 'Angriff', dePlural: null, gender: deutschParse.Gender.M },
-      { en: 'capability', de: 'Fähigkeit', dePlural: 'Fähigkeiten', gender: deutschParse.Gender.F },
-      { en: 'topic', de: 'Thema', dePlural: null, gender: deutschParse.Gender.N },
-      { en: 'stratum', de: 'Schicht', dePlural: 'Schichten', gender: deutschParse.Gender.F },
-      { en: 'shift', de: 'Schicht', dePlural: 'Schichten', gender: deutschParse.Gender.F },
+    satz.parse(sample).should.deep.equal([
+      { en: 'attack', de: 'Angriff', dePlural: null, gender: satz.Gender.M },
+      { en: 'capability', de: 'Fähigkeit', dePlural: 'Fähigkeiten', gender: satz.Gender.F },
+      { en: 'topic', de: 'Thema', dePlural: null, gender: satz.Gender.N },
+      { en: 'stratum', de: 'Schicht', dePlural: 'Schichten', gender: satz.Gender.F },
+      { en: 'shift', de: 'Schicht', dePlural: 'Schichten', gender: satz.Gender.F },
       // i.e. cross product
-      { en: 'oneEn', de: 'oneDe', dePlural: null, gender: deutschParse.Gender.F },
-      { en: 'oneEn', de: 'twoDe', dePlural: null, gender: deutschParse.Gender.F },
-      { en: 'twoEn', de: 'oneDe', dePlural: null, gender: deutschParse.Gender.F },
-      { en: 'twoEn', de: 'twoDe', dePlural: null, gender: deutschParse.Gender.F }
+      { en: 'oneEn', de: 'oneDe', dePlural: null, gender: satz.Gender.F },
+      { en: 'oneEn', de: 'twoDe', dePlural: null, gender: satz.Gender.F },
+      { en: 'twoEn', de: 'oneDe', dePlural: null, gender: satz.Gender.F },
+      { en: 'twoEn', de: 'twoDe', dePlural: null, gender: satz.Gender.F }
     ])
   })
 
   it('should generate accusative exercises', () => {
-    const exercise = deutschParse.accusative(sample, 1)
+    const exercise = satz.accusative(sample, 1)
     exercise.should.have.length(1)
     exercise[0].should.have.property('en')
     exercise[0].should.have.property('de')
   })
 
   it('should generate a subordinate clause exercises', () => {
-    const exercise = deutschParse.subordinate(sample, 1)
+    const exercise = satz.subordinate(sample, 1)
     exercise.should.have.length(1)
     exercise[0].should.have.property('en')
     exercise[0].should.have.property('de')

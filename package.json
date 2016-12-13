@@ -1,9 +1,9 @@
 {
-  "name": "deutsch-parse",
+  "name": "satz",
   "version": "0.0.0",
   "description": "Generate German language exercises from a vocabulary list.",
   "license": "ISC",
-  "repository": "https://github.com/raineorshine/deutsch-parse",
+  "repository": "https://github.com/raineorshine/satz",
   "author": {
     "name": "Raine Revere",
     "email": "raineorshine@gmail.com",
@@ -18,7 +18,7 @@
     "sub": "./bin.js sub < ./test/vocab.csv"
   },
   "bin": {
-    "deutsch-parse": "bin.js"
+    "satz": "bin.js"
   },
   "devDependencies": {
     "chai": "*",
