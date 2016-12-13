@@ -204,10 +204,6 @@ function toSentenceCase(str) {
   return str[0].toUpperCase() + str.slice(1)
 }
 
-function mapRepeat(n, f) {
-  return Array(n).join(' ').split(' ').map(f)
-}
-
 /** Returns the Gender of the given noun with its definite article. */
 function getGender(nounWithArticle) {
   const lower = nounWithArticle.toLowerCase()
@@ -238,10 +234,9 @@ function conjugateEn(subject, infinitive) {
     .replace('to ', '')
     .replace('be ', firstPerson ? 'am' : thirdPersonSingular ? 'is ' : 'are ')
     .split(' ')
-  const s = words[0].endsWith('h') ? 'es' : 's'
   const conjugatedVerb = thirdPersonSingular && !be ? (
       words[0].endsWith('y') ? words[0].slice(0, words[0].length-1) + 'ies' :
-      words[0].endsWith('h') ? words[0].slice(0, words[0].length-1) + 'es' :
+      words[0].endsWith('h') ? words[0] + 'es' :
       words[0] + 's'
     ) : words[0]
   return [].concat(conjugatedVerb, words.slice(1)).join(' ')
@@ -262,7 +257,7 @@ function parse(input) {
   // temporarily replace commas inside terms with this special token to avoid splitting in the wrong place
   const COMMA_TOKEN = 'COMMA_TOKEN'
 
-  const terms = input
+  return input
     .trim()
     .split('\n')
     // ignore headers
@@ -302,85 +297,75 @@ function parse(input) {
       ).reduce(concat)
     ).reduce(concat)
     .map(obj => lodash.pickBy(obj, lodash.identity))
-
-  return terms
 }
 
-/** Generates accusitive sentences. */
-function intransitive(input, n = 10) {
-  const words = parse(input)
-  return mapRepeat(n, () => {
+/** Generates a random simple intransitive verb sentence. */
+function intransitive(wordlist) {
+  const words = parse(wordlist)
 
-    // choose a random subject and intransitive verb
-    const subjectEn = lodash.sample(Object.keys(subjectsDeMap))
-    const article = lodash.sample(Object.keys(articles))
-    const verb = lodash.sample(words.filter(word => word.intransitive))
+  // choose a random subject and intransitive verb
+  const subjectEn = lodash.sample(Object.keys(subjectsDeMap))
+  const article = lodash.sample(Object.keys(articles))
+  const verb = lodash.sample(words.filter(word => word.intransitive))
 
-    const subjectDe = subjectsDeMap[subjectEn]
-    const verbEn = conjugateEn(subjectEn, verb.en)
-    const verbDe = conjugateDe(subjectEn, verb.de)
+  const subjectDe = subjectsDeMap[subjectEn]
+  const verbEn = conjugateEn(subjectEn, verb.en)
+  const verbDe = conjugateDe(subjectEn, verb.de)
 
-    return {
-      en: toSentenceCase(`${subjectEn} ${verbEn}.`),
-      de: toSentenceCase(`${subjectDe} ${verbDe}.`)
-    }
-  })
+  return {
+    en: toSentenceCase(`${subjectEn} ${verbEn}.`),
+    de: toSentenceCase(`${subjectDe} ${verbDe}.`)
+  }
 }
 
-/** Generates accusitive sentences. */
-function accusative(input, n = 10) {
-  const words = parse(input)
-  return mapRepeat(n, () => {
+/** Generates a random accusative sentence. */
+function accusative(wordlist) {
+  const words = parse(wordlist)
 
-    // choose a random subject, verb, article, and object
-    const subjectEn = lodash.sample(Object.keys(subjectsDeMap))
-    const article = lodash.sample(Object.keys(articles))
-    const object = lodash.sample(words.filter(word => word.concrete)) || defaultObj
-    const verb = lodash.sample(accVerbs)
+  // choose a random subject, verb, article, and object
+  const subjectEn = lodash.sample(Object.keys(subjectsDeMap))
+  const article = lodash.sample(Object.keys(articles))
+  const object = lodash.sample(words.filter(word => word.concrete)) || defaultObj
+  const verb = lodash.sample(accVerbs)
 
-    const articleEn = article === 'a' && /^[aeiou]/.test(object.en) ? 'an' : article
-    const subjectDe = subjectsDeMap[subjectEn]
-    const verbEn = verb.en[subjectEn]
-    const verbDe = verb.de[subjectEn]
-    const articleDe = articles[article].acc[object.gender]
+  const articleEn = article === 'a' && /^[aeiou]/.test(object.en) ? 'an' : article
+  const subjectDe = subjectsDeMap[subjectEn]
+  const verbEn = verb.en[subjectEn]
+  const verbDe = verb.de[subjectEn]
+  const articleDe = articles[article].acc[object.gender]
 
-    return {
-      en: toSentenceCase(`${subjectEn} ${verbEn} ${articleEn} ${object.en}.`),
-      de: toSentenceCase(`${subjectDe} ${verbDe} ${articleDe} ${object.de}.`)
-    }
-  })
+  return {
+    en: toSentenceCase(`${subjectEn} ${verbEn} ${articleEn} ${object.en}.`),
+    de: toSentenceCase(`${subjectDe} ${verbDe} ${articleDe} ${object.de}.`)
+  }
 }
 
-/** Generates subordinate sentences. */
-function subordinate(input, n = 10) {
-  const words = parse(input)
-  return mapRepeat(n, () => {
+/** Generates a random subordinate sentence. */
+function subordinate(wordlist) {
+  // choose a random subject and verb for the independent clause
+  const indSubjectEn = lodash.sample(Object.keys(subjectsDeMap).filter(subject => subject != 'it'))
+  const indVerb = lodash.sample(subordinateVerbs)
+  const indVerbEn = indVerb.en[indSubjectEn]
 
-    // choose a random subject and verb for the independent clause
-    const indSubjectEn = lodash.sample(Object.keys(subjectsDeMap).filter(subject => subject != 'it'))
-    const indVerb = lodash.sample(subordinateVerbs)
-    const indVerbEn = indVerb.en[indSubjectEn]
+  const indSubjectDe = subjectsDeMap[indSubjectEn]
+  const indVerbDe = indVerb.de[indSubjectEn]
 
-    const indSubjectDe = subjectsDeMap[indSubjectEn]
-    const indVerbDe = indVerb.de[indSubjectEn]
+  // choose a random subject, verb, article, and object for the subordinate clause
+  const subjectEn = lodash.sample(Object.keys(subjectsDeMap))
+  const article = lodash.sample(Object.keys(articles))
+  const object = lodash.sample(words.filter(word => word.concrete)) || defaultObj
+  const verb = lodash.sample(accVerbs)
 
-    // choose a random subject, verb, article, and object for the subordinate clause
-    const subjectEn = lodash.sample(Object.keys(subjectsDeMap))
-    const article = lodash.sample(Object.keys(articles))
-    const object = lodash.sample(words.filter(word => word.concrete)) || defaultObj
-    const verb = lodash.sample(accVerbs)
+  const articleEn = article === 'a' && /^[aeiou]/.test(object.en) ? 'an' : article
+  const subjectDe = subjectsDeMap[subjectEn]
+  const verbEn = verb.en[subjectEn]
+  const verbDe = verb.de[subjectEn]
+  const articleDe = articles[article].acc[object.gender]
 
-    const articleEn = article === 'a' && /^[aeiou]/.test(object.en) ? 'an' : article
-    const subjectDe = subjectsDeMap[subjectEn]
-    const verbEn = verb.en[subjectEn]
-    const verbDe = verb.de[subjectEn]
-    const articleDe = articles[article].acc[object.gender]
-
-    return {
-      en: toSentenceCase(`${indSubjectEn} ${indVerbEn} that ${subjectEn} ${verbEn} ${articleEn} ${object.en}.`),
-      de: toSentenceCase(`${indSubjectDe} ${indVerbDe}, dass ${subjectDe} ${articleDe} ${object.de} ${verbDe}.`)
-    }
-  })
+  return {
+    en: toSentenceCase(`${indSubjectEn} ${indVerbEn} that ${subjectEn} ${verbEn} ${articleEn} ${object.en}.`),
+    de: toSentenceCase(`${indSubjectDe} ${indVerbDe}, dass ${subjectDe} ${articleDe} ${object.de} ${verbDe}.`)
+  }
 }
 
 module.exports = {

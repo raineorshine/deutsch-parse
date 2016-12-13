@@ -6,6 +6,8 @@ const pkg = require('./package.json')
 const lodash = require('lodash')
 const satz = require('./')
 
+const defaultNumber = 10
+
 const extendedHelp = `
 
     ${pkg.description}`
@@ -31,6 +33,11 @@ function toCSV(data) {
     .join('\n')
 }
 
+/** Returns a function that maps the results of the given function n times. */
+function repeat(n, f) {
+  return (...args) => Array(n).join(' ').split(' ').map(() => f(...args))
+}
+
 com
   .version(pkg.version)
   .usage(extendedHelp)
@@ -50,7 +57,7 @@ com
   .option('-n, --number <n>', 'Number of exercises to generate.')
   .action(() => {
     readVocab()
-      .then(lodash.flow(satz.intransitive, toCSV))
+      .then(lodash.flow(repeat(com.number || defaultNumber, satz.intransitive), toCSV))
       .then(console.log, console.error)
   })
 
@@ -60,7 +67,7 @@ com
   .option('-n, --number <n>', 'Number of exercises to generate.')
   .action(() => {
     readVocab()
-      .then(lodash.flow(satz.accusative, toCSV))
+      .then(lodash.flow(repeat(com.number || defaultNumber, satz.accusative), toCSV))
       .then(console.log, console.error)
   })
 
@@ -70,7 +77,7 @@ com
   .option('-n, --number <n>', 'Number of exercises to generate.')
   .action(() => {
     readVocab()
-      .then(lodash.flow(satz.subordinate, toCSV))
+      .then(lodash.flow(repeat(com.number || defaultNumber, satz.subordinate), toCSV))
       .then(console.log, console.error)
   })
 
