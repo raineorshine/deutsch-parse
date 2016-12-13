@@ -29,6 +29,12 @@ satz.accusative(...)
 satz.subordinate(...)
 ```
 
+## Todo
+
+- plural objects
+- conjugate irregular verbs
+- past tense
+
 ## License
 
 ISC © [Raine Revere](http://raine.tech)

@@ -36,10 +36,9 @@ const Gender = {
 const subjectsDeMap = {
   I: 'ich',
   you: 'du',
-  'you (plural, informal)': 'ihr',
+  // 'you (plural, informal)': 'ihr',
   he: 'er',
   she: 'sie',
-  it: 'es',
   we: 'wir',
   they: 'sie'
 }
@@ -231,6 +230,32 @@ function concat(a, b) {
   return a.concat(b)
 }
 
+function conjugateEn(subject, infinitive) {
+  const firstPerson = subject === 'I'
+  const thirdPersonSingular = subject === 'he' || subject === 'she' || subject === 'it'
+  const be = infinitive.startsWith('to be ')
+  const words = infinitive
+    .replace('to ', '')
+    .replace('be ', firstPerson ? 'am' : thirdPersonSingular ? 'is ' : 'are ')
+    .split(' ')
+  const s = words[0].endsWith('h') ? 'es' : 's'
+  const conjugatedVerb = thirdPersonSingular && !be ? (
+      words[0].endsWith('y') ? words[0].slice(0, words[0].length-1) + 'ies' :
+      words[0].endsWith('h') ? words[0].slice(0, words[0].length-1) + 'es' :
+      words[0] + 's'
+    ) : words[0]
+  return [].concat(conjugatedVerb, words.slice(1)).join(' ')
+}
+
+function conjugateDe(subject, infinitive) {
+  const base = infinitive.slice(0, infinitive.length - 2)
+  const thirdPersonSingular = subject === 'he' || subject === 'she' || subject === 'it'
+  return subject === 'I' ? base + 'e' :
+    subject === 'you' ? base + 'st' :
+    thirdPersonSingular ? base + 't' :
+    infinitive
+}
+
 /** Parses a vocab list. */
 function parse(input) {
 
@@ -240,6 +265,8 @@ function parse(input) {
   const terms = input
     .trim()
     .split('\n')
+    // ignore headers
+    .slice(1)
     .filter(lodash.identity)
     // replace term commas with special token
     .map(lodash.flow(
@@ -253,9 +280,9 @@ function parse(input) {
       .map(en => splitTermAndRemoveQuotes(termArray[csvColumns.indexOf('Text 2')] || '')
         .map(de => splitTermAndRemoveQuotes(termArray[csvColumns.indexOf('Text 3')] || '')
           .map(deOther => ({
-            en,
-            de: removeArticle(de),
-            dePlural: removeArticle(deOther || ''),
+            en: en.trim(),
+            de: removeArticle(de).trim(),
+            dePlural: removeArticle(deOther || '').trim(),
             gender: getGender(de),
             abstract: termArray[csvColumns.indexOf('Abstract')],
             concrete: termArray[csvColumns.indexOf('Concrete')],
@@ -280,14 +307,35 @@ function parse(input) {
 }
 
 /** Generates accusitive sentences. */
-function accusative(input, n = 5) {
-  const nouns = parse(input).filter(term => term.gender)
+function intransitive(input, n = 10) {
+  const words = parse(input)
+  return mapRepeat(n, () => {
+
+    // choose a random subject and intransitive verb
+    const subjectEn = lodash.sample(Object.keys(subjectsDeMap))
+    const article = lodash.sample(Object.keys(articles))
+    const verb = lodash.sample(words.filter(word => word.intransitive))
+
+    const subjectDe = subjectsDeMap[subjectEn]
+    const verbEn = conjugateEn(subjectEn, verb.en)
+    const verbDe = conjugateDe(subjectEn, verb.de)
+
+    return {
+      en: toSentenceCase(`${subjectEn} ${verbEn}.`),
+      de: toSentenceCase(`${subjectDe} ${verbDe}.`)
+    }
+  })
+}
+
+/** Generates accusitive sentences. */
+function accusative(input, n = 10) {
+  const words = parse(input)
   return mapRepeat(n, () => {
 
     // choose a random subject, verb, article, and object
     const subjectEn = lodash.sample(Object.keys(subjectsDeMap))
     const article = lodash.sample(Object.keys(articles))
-    const object = lodash.sample(nouns)
+    const object = lodash.sample(words.filter(word => word.concrete)) || defaultObj
     const verb = lodash.sample(accVerbs)
 
     const articleEn = article === 'a' && /^[aeiou]/.test(object.en) ? 'an' : article
@@ -304,8 +352,8 @@ function accusative(input, n = 5) {
 }
 
 /** Generates subordinate sentences. */
-function subordinate(input, n = 5) {
-  const nouns = parse(input).filter(term => term.gender)
+function subordinate(input, n = 10) {
+  const words = parse(input)
   return mapRepeat(n, () => {
 
     // choose a random subject and verb for the independent clause
@@ -319,7 +367,7 @@ function subordinate(input, n = 5) {
     // choose a random subject, verb, article, and object for the subordinate clause
     const subjectEn = lodash.sample(Object.keys(subjectsDeMap))
     const article = lodash.sample(Object.keys(articles))
-    const object = lodash.sample(nouns.filter(noun => noun.concrete)) || defaultObj
+    const object = lodash.sample(words.filter(word => word.concrete)) || defaultObj
     const verb = lodash.sample(accVerbs)
 
     const articleEn = article === 'a' && /^[aeiou]/.test(object.en) ? 'an' : article
@@ -338,6 +386,7 @@ function subordinate(input, n = 5) {
 module.exports = {
   Gender,
   parse,
+  intransitive,
   accusative,
   subordinate
 }

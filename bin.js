@@ -45,6 +45,16 @@ com
   })
 
 com
+  .command('int')
+  .description('simple, intransitive verbs')
+  .option('-n, --number <n>', 'Number of exercises to generate.')
+  .action(() => {
+    readVocab()
+      .then(lodash.flow(satz.intransitive, toCSV))
+      .then(console.log, console.error)
+  })
+
+com
   .command('acc')
   .description('accusative')
   .option('-n, --number <n>', 'Number of exercises to generate.')

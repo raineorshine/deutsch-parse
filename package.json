@@ -14,8 +14,7 @@
   },
   "scripts": {
     "test": "mocha",
-    "acc": "./bin.js acc < ./test/vocab.csv",
-    "sub": "./bin.js sub < ./test/vocab.csv"
+    "sample": "./bin.js -- < ./test/vocab.csv"
   },
   "bin": {
     "satz": "bin.js"
