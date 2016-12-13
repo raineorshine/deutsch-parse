@@ -10,13 +10,20 @@ npm install --save -g satz
 ## CLI Usage
 
 ```sh
-$ echo "apple,der Apfel" | satz acc
+$ satz acc --pretty < vocab.csv
 
-She sees the apple.,Sie sieht den Apfel.
-I see an apple.,Ich sehe einen Apfel.
-You see an apple.,Du siehst einen Apfel.
-They see an apple.,Sie sehen einen Apfel.
-We see an apple.,Wir sehen einen Apfel.
+┌─────────────────────┬─────────────────────────┐
+│ She sees no face.   │ Sie sieht kein Gesicht. │
+│ They see a floor.   │ Sie sehen eine Etage.   │
+│ He sees no peak.    │ Er sieht keinen Gipfel. │
+│ She sees no camera. │ Sie sieht keine Kamera. │
+│ I see a blouse.     │ Ich sehe eine Bluse.    │
+│ You see the peak.   │ Du siehst den Gipfel.   │
+│ I see a photo.      │ Ich sehe ein Foto.      │
+│ You see a ball.     │ Du siehst einen Ball.   │
+│ He sees a cloud.    │ Er sieht eine Wolke.    │
+│ I see a yard.       │ Ich sehe einen Hof.     │
+└─────────────────────┴─────────────────────────┘
 ```
 
 ## API Usage
@@ -25,6 +32,7 @@ We see an apple.,Wir sehen einen Apfel.
 const satz = require('satz')
 
 satz.parse(...)
+satz.intransitive(...)
 satz.accusative(...)
 satz.subordinate(...)
 ```
@@ -34,6 +42,7 @@ satz.subordinate(...)
 - plural objects
 - conjugate irregular verbs
 - past tense
+- remove accVerbs
 
 ## License
 

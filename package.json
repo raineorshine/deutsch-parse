@@ -10,22 +10,23 @@
     "url": "http://raine.tech"
   },
   "engines": {
-    "node": ">=0.12.0"
+    "node": ">=4.0.0"
   },
   "scripts": {
     "test": "mocha",
-    "sample": "./bin.js -- < ./test/vocab.csv"
+    "sample": "./bin.js --pretty -- < ./test/vocab.csv"
   },
   "bin": {
     "satz": "bin.js"
   },
   "devDependencies": {
-    "chai": "*",
-    "mocha": "*"
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0"
   },
   "dependencies": {
-    "commander": "*",
-    "get-stdin-promise": "*",
+    "cli-table": "^0.3.1",
+    "commander": "^2.9.0",
+    "get-stdin-promise": "^0.1.1",
     "lodash": "^4.17.2"
   }
 }

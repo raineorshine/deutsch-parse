@@ -5,6 +5,7 @@ const stdin = require('get-stdin-promise')
 const pkg = require('./package.json')
 const lodash = require('lodash')
 const satz = require('./')
+const Table = require('cli-table')
 
 const defaultNumber = 10
 
@@ -33,53 +34,57 @@ function toCSV(data) {
     .join('\n')
 }
 
+function toTable(data) {
+  const table = new Table({ chars: {'mid': '', 'left-mid': '', 'mid-mid': '', 'right-mid': ''} })
+  table.push.apply(table, data.map(sentence => [sentence.en, sentence.de]))
+
+  return table.toString()
+}
+
 /** Returns a function that maps the results of the given function n times. */
 function repeat(n, f) {
   return (...args) => Array(n).join(' ').split(' ').map(() => f(...args))
 }
 
+/** Reads input from stdin, executes the given function on the input, and converts it to CSV. */
+function readAndExecute(f) {
+  return readVocab()
+    .then(lodash.flow(f, com.pretty ? toTable : toCSV))
+    .then(console.log, console.error)
+}
+
+/** Reads input from stdin, executes the given function on the input n times, and converts it to CSV. */
+function readAndExecuteMany(f) {
+  return readAndExecute(repeat(com.number || defaultNumber, f))
+}
+
 com
   .version(pkg.version)
   .usage(extendedHelp)
+  .option('-p, --pretty', 'pretty print')
 
 com
   .command('parse')
   .description('parse a vocabulary list in csv format')
-  .action(() => {
-    readVocab()
-      .then(satz.parse)
-      .then(console.log, console.error)
-  })
+  .action(() => readAndExecute(satz.parse))
 
 com
   .command('int')
   .description('simple, intransitive verbs')
   .option('-n, --number <n>', 'Number of exercises to generate.')
-  .action(() => {
-    readVocab()
-      .then(lodash.flow(repeat(com.number || defaultNumber, satz.intransitive), toCSV))
-      .then(console.log, console.error)
-  })
+  .action(() => readAndExecuteMany(satz.intransitive))
 
 com
   .command('acc')
   .description('accusative')
   .option('-n, --number <n>', 'Number of exercises to generate.')
-  .action(() => {
-    readVocab()
-      .then(lodash.flow(repeat(com.number || defaultNumber, satz.accusative), toCSV))
-      .then(console.log, console.error)
-  })
+  .action(() => readAndExecuteMany(satz.accusative))
 
 com
   .command('sub')
   .description('subordinate clauses')
   .option('-n, --number <n>', 'Number of exercises to generate.')
-  .action(() => {
-    readVocab()
-      .then(lodash.flow(repeat(com.number || defaultNumber, satz.subordinate), toCSV))
-      .then(console.log, console.error)
-  })
+  .action(() => readAndExecuteMany(satz.subordinate))
 
 com.parse(process.argv)
 

@@ -3,6 +3,7 @@ const satz = require('../index.js')
 const should = chai.should()
 
 const sample = `
+Text 1,Text 2,Text 3,Category 1,Category 2,Abstract,Concrete,?,Nonhuman,Animal subject,Human subject,Modal,Intran,Acc (Abstract),Acc (Concrete),Dat,Dat + Acc (Concrete),Dat + Acc (Abstract),Acc + Vo,dass
 attack,der Angriff
 capability,die Fähigkeit,die Fähigkeiten
 impressive,eindrucksvoll
@@ -34,18 +35,22 @@ describe('satz', () => {
     ])
   })
 
-  it('should generate accusative exercises', () => {
-    const exercise = satz.accusative(sample, 1)
-    exercise.should.have.length(1)
-    exercise[0].should.have.property('en')
-    exercise[0].should.have.property('de')
+  it('should generate an intransitive verb sentence', () => {
+    const exercise = satz.intransitive(sample)
+    exercise.should.have.property('en')
+    exercise.should.have.property('de')
+  })
+
+  it('should generate an accusative article sentence', () => {
+    const exercise = satz.accusative(sample)
+    exercise.should.have.property('en')
+    exercise.should.have.property('de')
   })
 
   it('should generate a subordinate clause exercises', () => {
-    const exercise = satz.subordinate(sample, 1)
-    exercise.should.have.length(1)
-    exercise[0].should.have.property('en')
-    exercise[0].should.have.property('de')
+    const exercise = satz.subordinate(sample)
+    exercise.should.have.property('en')
+    exercise.should.have.property('de')
   })
 
 })

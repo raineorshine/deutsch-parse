@@ -24,6 +24,7 @@ const csvColumns = [
 ]
 
 const defaultObj = { en: 'apple', de: 'Apfel', gender: 1 }
+const defaultIntransitive = { en: 'see', de: 'sehen' }
 
 /** Gender enum */
 // start at 1 so all values are truthy
@@ -306,7 +307,7 @@ function intransitive(wordlist) {
   // choose a random subject and intransitive verb
   const subjectEn = lodash.sample(Object.keys(subjectsDeMap))
   const article = lodash.sample(Object.keys(articles))
-  const verb = lodash.sample(words.filter(word => word.intransitive))
+  const verb = lodash.sample(words.filter(word => word.intransitive)) || defaultIntransitive
 
   const subjectDe = subjectsDeMap[subjectEn]
   const verbEn = conjugateEn(subjectEn, verb.en)
@@ -342,6 +343,8 @@ function accusative(wordlist) {
 
 /** Generates a random subordinate sentence. */
 function subordinate(wordlist) {
+  const words = parse(wordlist)
+
   // choose a random subject and verb for the independent clause
   const indSubjectEn = lodash.sample(Object.keys(subjectsDeMap).filter(subject => subject != 'it'))
   const indVerb = lodash.sample(subordinateVerbs)
