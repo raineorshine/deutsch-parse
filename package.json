@@ -14,8 +14,8 @@
   },
   "scripts": {
     "test": "mocha",
-    "acc": "./bin.js acc < ./test/small-sample.csv",
-    "sub": "./bin.js sub < ./test/small-sample.csv"
+    "acc": "./bin.js acc < ./test/vocab.csv",
+    "sub": "./bin.js sub < ./test/vocab.csv"
   },
   "bin": {
     "deutsch-parse": "bin.js"

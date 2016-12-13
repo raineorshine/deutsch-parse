@@ -197,18 +197,39 @@ function removeArticle(nounWithArticle) {
   return nounWithArticle.replace(/^(der|die|das)\s+/, '')
 }
 
+function splitTermAndRemoveQuotes(term) {
+  return term.replace(/"/g, '').split(/\s*,\s*/)
+}
+
+function concat(a, b) {
+  return a.concat(b)
+}
+
 /** Parses a vocab list. */
 function parse(input) {
+
+  // temporarily replace commas inside terms with this special token to avoid splitting in the wrong place
+  const COMMA_TOKEN = 'COMMA_TOKEN'
 
   const terms = input
     .trim()
     .split('\n')
-    .map(line => line.split(/\t|\s{2,}/))
-    .map(termArray => ({
-      en: termArray[0],
-      de: termArray[1],
-      deOther: termArray[2]
-    }))
+    // replace term commas with special token
+    .map(lodash.flow(
+      line => line.replace(/"[^"]+"/g, match => match.replace(',', COMMA_TOKEN)),
+      line => line.split(','),
+      // put commas back
+      termArray => termArray.map(term => term.replace(COMMA_TOKEN, ','))
+    ))
+    // do a bunch of concatMaps to effectively create a cross product of terms if there are multiple
+    .map(termArray => splitTermAndRemoveQuotes(termArray[0])
+      .map(en => splitTermAndRemoveQuotes(termArray[1] || '')
+        .map(de => splitTermAndRemoveQuotes(termArray[2] || '')
+          .map(deOther => ({ en, de, deOther }))
+        ).reduce(concat)
+      ).reduce(concat)
+    ).reduce(concat)
+
 
   const nouns = terms
     .filter(term => /^(der|die|das)\s+/.test(term.de))
@@ -233,7 +254,7 @@ function accusative(input, n = 5) {
     const object = lodash.sample(nouns)
     const verb = lodash.sample(accVerbs)
 
-    const articleEn = article === 'a' && /^[aeiou]/.test(object.en) ? 'an' : 'a'
+    const articleEn = article === 'a' && /^[aeiou]/.test(object.en) ? 'an' : article
     const subjectDe = subjectsDeMap[subjectEn]
     const verbEn = verb.en[subjectEn]
     const verbDe = verb.de[subjectEn]

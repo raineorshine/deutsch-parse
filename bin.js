@@ -21,9 +21,13 @@ function readVocab() {
     })
 }
 
+function escapeCSV(str) {
+  return str.indexOf(',') !== -1 ? `"${str}"` : str
+}
+
 function toCSV(data) {
   return data
-    .map(sentence => sentence.en + '\t' + sentence.de)
+    .map(sentence => escapeCSV(sentence.en) + ',' + escapeCSV(sentence.de))
     .join('\n')
 }
 

@@ -7,8 +7,10 @@ attack,der Angriff
 capability,die Fähigkeit,die Fähigkeiten
 impressive,eindrucksvoll
 topic,das Thema
-indoors,drinnen
+indoors,drinnen,,,,,,,,,,,,,,,
 "good, well",gut
+"stratum, shift",die Schicht,die Schichten
+"oneEn, twoEn","die oneDe, die twoDe"
 `
 
 describe('deutsch-parse', () => {
@@ -17,7 +19,14 @@ describe('deutsch-parse', () => {
     deutschParse.parse(sample).should.deep.equal([
       { en: 'attack', de: 'Angriff', dePlural: null, gender: deutschParse.Gender.M },
       { en: 'capability', de: 'Fähigkeit', dePlural: 'Fähigkeiten', gender: deutschParse.Gender.F },
-      { en: 'topic', de: 'Thema', dePlural: null, gender: deutschParse.Gender.N }
+      { en: 'topic', de: 'Thema', dePlural: null, gender: deutschParse.Gender.N },
+      { en: 'stratum', de: 'Schicht', dePlural: 'Schichten', gender: deutschParse.Gender.F },
+      { en: 'shift', de: 'Schicht', dePlural: 'Schichten', gender: deutschParse.Gender.F },
+      // i.e. cross product
+      { en: 'oneEn', de: 'oneDe', dePlural: null, gender: deutschParse.Gender.F },
+      { en: 'oneEn', de: 'twoDe', dePlural: null, gender: deutschParse.Gender.F },
+      { en: 'twoEn', de: 'oneDe', dePlural: null, gender: deutschParse.Gender.F },
+      { en: 'twoEn', de: 'twoDe', dePlural: null, gender: deutschParse.Gender.F }
     ])
   })
 
