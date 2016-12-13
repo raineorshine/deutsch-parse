@@ -1,10 +1,36 @@
 const lodash = require('lodash')
 
+const csvColumns = [
+  'Text 1',
+  'Text 2',
+  'Text 3',
+  'Category 1',
+  'Category 2',
+  'Abstract',
+  'Concrete',
+  '?',
+  'Nonhuman',
+  'Animal subject',
+  'Human subject',
+  'Modal',
+  'Intran',
+  'Acc (Abstract)',
+  'Acc (Concrete)',
+  'Dat',
+  'Dat + Acc (Concrete)',
+  'Dat + Acc (Abstract)',
+  'Acc + Vo',
+  'dass'
+]
+
+const defaultObj = { en: 'apple', de: 'Apfel', gender: 1 }
+
 /** Gender enum */
+// start at 1 so all values are truthy
 const Gender = {
-  M: 0,
-  F: 1,
-  N: 2
+  M: 1,
+  F: 2,
+  N: 3
 }
 
 const subjectsDeMap = {
@@ -186,10 +212,10 @@ function mapRepeat(n, f) {
 /** Returns the Gender of the given noun with its definite article. */
 function getGender(nounWithArticle) {
   const lower = nounWithArticle.toLowerCase()
-  return lower.startsWith('der') ? Gender.M :
-    lower.startsWith('die') ? Gender.F :
-    lower.startsWith('das') ? Gender.N :
-    new Error('Could not detect gender: ' + nounWithArticle)
+  return lower.startsWith('der ') ? Gender.M :
+    lower.startsWith('die ') ? Gender.F :
+    lower.startsWith('das ') ? Gender.N :
+    null
 }
 
 /** Returns the noun without its article. */
@@ -214,6 +240,7 @@ function parse(input) {
   const terms = input
     .trim()
     .split('\n')
+    .filter(lodash.identity)
     // replace term commas with special token
     .map(lodash.flow(
       line => line.replace(/"[^"]+"/g, match => match.replace(',', COMMA_TOKEN)),
@@ -222,30 +249,39 @@ function parse(input) {
       termArray => termArray.map(term => term.replace(COMMA_TOKEN, ','))
     ))
     // do a bunch of concatMaps to effectively create a cross product of terms if there are multiple
-    .map(termArray => splitTermAndRemoveQuotes(termArray[0])
-      .map(en => splitTermAndRemoveQuotes(termArray[1] || '')
-        .map(de => splitTermAndRemoveQuotes(termArray[2] || '')
-          .map(deOther => ({ en, de, deOther }))
+    .map(termArray => splitTermAndRemoveQuotes(termArray[csvColumns.indexOf('Text 1')])
+      .map(en => splitTermAndRemoveQuotes(termArray[csvColumns.indexOf('Text 2')] || '')
+        .map(de => splitTermAndRemoveQuotes(termArray[csvColumns.indexOf('Text 3')] || '')
+          .map(deOther => ({
+            en,
+            de: removeArticle(de),
+            dePlural: removeArticle(deOther || ''),
+            gender: getGender(de),
+            abstract: termArray[csvColumns.indexOf('Abstract')],
+            concrete: termArray[csvColumns.indexOf('Concrete')],
+            nonhuman: termArray[csvColumns.indexOf('Nonhuman')],
+            animalSubject: termArray[csvColumns.indexOf('Animal subject')],
+            humanSubject: termArray[csvColumns.indexOf('Human subject')],
+            modal: termArray[csvColumns.indexOf('Modal')],
+            intransitive: termArray[csvColumns.indexOf('Intran')],
+            accAbstract: termArray[csvColumns.indexOf('Acc (Abstract)')],
+            accConcrete: termArray[csvColumns.indexOf('Acc (Concrete)')],
+            dat: termArray[csvColumns.indexOf('Dat')],
+            datAccConcrete: termArray[csvColumns.indexOf('Dat + Acc (Concrete)')],
+            datAccAbstract: termArray[csvColumns.indexOf('Dat + Acc (Abstract)')],
+            accVo: termArray[csvColumns.indexOf('Acc + Vo')]
+           }))
         ).reduce(concat)
       ).reduce(concat)
     ).reduce(concat)
+    .map(obj => lodash.pickBy(obj, lodash.identity))
 
-
-  const nouns = terms
-    .filter(term => /^(der|die|das)\s+/.test(term.de))
-    .map(noun => ({
-      en: noun.en,
-      de: removeArticle(noun.de),
-      dePlural: noun.deOther ? removeArticle(noun.deOther) : null,
-      gender: getGender(noun.de)
-    }))
-
-  return nouns
+  return terms
 }
 
 /** Generates accusitive sentences. */
 function accusative(input, n = 5) {
-  const nouns = parse(input)
+  const nouns = parse(input).filter(term => term.gender)
   return mapRepeat(n, () => {
 
     // choose a random subject, verb, article, and object
@@ -269,7 +305,7 @@ function accusative(input, n = 5) {
 
 /** Generates subordinate sentences. */
 function subordinate(input, n = 5) {
-  const nouns = parse(input)
+  const nouns = parse(input).filter(term => term.gender)
   return mapRepeat(n, () => {
 
     // choose a random subject and verb for the independent clause
@@ -283,7 +319,7 @@ function subordinate(input, n = 5) {
     // choose a random subject, verb, article, and object for the subordinate clause
     const subjectEn = lodash.sample(Object.keys(subjectsDeMap))
     const article = lodash.sample(Object.keys(articles))
-    const object = lodash.sample(nouns)
+    const object = lodash.sample(nouns.filter(noun => noun.concrete)) || defaultObj
     const verb = lodash.sample(accVerbs)
 
     const articleEn = article === 'a' && /^[aeiou]/.test(object.en) ? 'an' : article

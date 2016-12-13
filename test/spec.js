@@ -17,16 +17,20 @@ describe('satz', () => {
 
   it('should parse a vocab list', () => {
     satz.parse(sample).should.deep.equal([
-      { en: 'attack', de: 'Angriff', dePlural: null, gender: satz.Gender.M },
+      { en: 'attack', de: 'Angriff', gender: satz.Gender.M },
       { en: 'capability', de: 'Fähigkeit', dePlural: 'Fähigkeiten', gender: satz.Gender.F },
-      { en: 'topic', de: 'Thema', dePlural: null, gender: satz.Gender.N },
+      { en: 'impressive', de: 'eindrucksvoll' },
+      { en: 'topic', de: 'Thema', gender: satz.Gender.N },
+      { en: 'indoors', de: 'drinnen' },
+      { en: 'good', de: 'gut' },
+      { en: 'well', de: 'gut' },
       { en: 'stratum', de: 'Schicht', dePlural: 'Schichten', gender: satz.Gender.F },
       { en: 'shift', de: 'Schicht', dePlural: 'Schichten', gender: satz.Gender.F },
       // i.e. cross product
-      { en: 'oneEn', de: 'oneDe', dePlural: null, gender: satz.Gender.F },
-      { en: 'oneEn', de: 'twoDe', dePlural: null, gender: satz.Gender.F },
-      { en: 'twoEn', de: 'oneDe', dePlural: null, gender: satz.Gender.F },
-      { en: 'twoEn', de: 'twoDe', dePlural: null, gender: satz.Gender.F }
+      { en: 'oneEn', de: 'oneDe', gender: satz.Gender.F },
+      { en: 'oneEn', de: 'twoDe', gender: satz.Gender.F },
+      { en: 'twoEn', de: 'oneDe', gender: satz.Gender.F },
+      { en: 'twoEn', de: 'twoDe', gender: satz.Gender.F }
     ])
   })
 
