@@ -40,9 +40,7 @@ satz.subordinate(...)
 ## Todo
 
 - plural objects
-- conjugate irregular verbs
 - past tense
-- remove accVerbs
 
 ## License
 

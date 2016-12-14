@@ -8,6 +8,8 @@ const csvColumns = [
   'Category 2',
   'Abstract',
   'Concrete',
+  //'Place',
+  //'No Article',
   '?',
   'Nonhuman',
   'Animal subject',
@@ -25,6 +27,9 @@ const csvColumns = [
 
 const defaultObj = { en: 'apple', de: 'Apfel', gender: 1 }
 const defaultIntransitive = { en: 'see', de: 'sehen' }
+const defaultAccusative = { en: 'see', de: 'sehen' }
+const defaultSubordinateVerb = { en: 'think', de: 'denken' }
+const defaultVerb = { en: 'think', de: 'denken' }
 
 /** Gender enum */
 // start at 1 so all values are truthy
@@ -83,126 +88,25 @@ const articles = {
   }
 }
 
-/** Verbs that can be used with the accusitive. */
-const accVerbs = [
-  {
-    en: {
-      I: 'see',
-      you: 'see',
-      'you (plural, informal)': 'see',
-      he: 'sees',
-      she: 'sees',
-      it: 'sees',
-      we: 'see',
-      they: 'see'
-    },
+const irregulars = {
+  see: {
     de: {
-      I: 'sehe',
       you: 'siehst',
-      'you (plural, informal)': 'seht',
       he: 'sieht',
       she: 'sieht',
-      it: 'sieht',
-      we: 'sehen',
-      they: 'sehen'
+      it: 'sieht'
     }
   }
-]
+}
 
-/** Verbs that can be used to trigger a subordinate clause. */
-const subordinateVerbs = [
-  {
-    en: {
-      I: 'see',
-      you: 'see',
-      'you (plural, informal)': 'see',
-      he: 'sees',
-      she: 'sees',
-      it: 'sees',
-      we: 'see',
-      they: 'see'
-    },
-    de: {
-      I: 'sehe',
-      you: 'siehst',
-      'you (plural, informal)': 'seht',
-      he: 'sieht',
-      she: 'sieht',
-      it: 'sieht',
-      we: 'sehen',
-      they: 'sehen'
-    }
-  },
-  {
-    en: {
-      I: 'think',
-      you: 'think',
-      'you (plural, informal)': 'think',
-      he: 'thinks',
-      she: 'thinks',
-      it: 'thinks',
-      we: 'think',
-      they: 'think'
-    },
-    de: {
-      I: 'denk',
-      you: 'denkst',
-      'you (plural, informal)': 'denkt',
-      he: 'denkt',
-      she: 'denkt',
-      it: 'denkt',
-      we: 'denken',
-      they: 'denken'
-    }
-  },
-  {
-    en: {
-      I: 'hope',
-      you: 'hope',
-      'you (plural, informal)': 'hope',
-      he: 'hopes',
-      she: 'hopes',
-      it: 'hopes',
-      we: 'hope',
-      they: 'hope'
-    },
-    de: {
-      I: 'hoffe',
-      you: 'hoffst',
-      'you (plural, informal)': 'hofft',
-      he: 'hofft',
-      she: 'hofft',
-      it: 'hofft',
-      we: 'hoffen',
-      they: 'hoffen'
-    }
-  },
-  {
-    en: {
-      I: 'believe',
-      you: 'believe',
-      'you (plural, informal)': 'believe',
-      he: 'believes',
-      she: 'believes',
-      it: 'believes',
-      we: 'believe',
-      they: 'believe'
-    },
-    de: {
-      I: 'glaub',
-      you: 'glaubst',
-      'you (plural, informal)': 'glaubt',
-      he: 'glaubt',
-      she: 'glaubt',
-      it: 'glaubt',
-      we: 'glauben',
-      they: 'glauben'
-    }
-  }
-]
-
+/** Uppercases the first letter of a sentence. */
 function toSentenceCase(str) {
   return str[0].toUpperCase() + str.slice(1)
+}
+
+/** Construct a sentence out of the given words by joining the non-empty words with spaces, capitalizing the first letter of the sentence, and adding a period at the end */
+function constructSentence(words) {
+  return toSentenceCase(lodash.compact(words).join(' ')).replace(/ , /g, ', ') + '.'
 }
 
 /** Returns the Gender of the given noun with its definite article. */
@@ -227,6 +131,10 @@ function concat(a, b) {
   return a.concat(b)
 }
 
+function isVerb(word) {
+  return word.en.startsWith('to ')
+}
+
 function conjugateEn(subject, infinitive) {
   const firstPerson = subject === 'I'
   const thirdPersonSingular = subject === 'he' || subject === 'she' || subject === 'it'
@@ -243,11 +151,12 @@ function conjugateEn(subject, infinitive) {
   return [].concat(conjugatedVerb, words.slice(1)).join(' ')
 }
 
-function conjugateDe(subject, infinitive) {
-  const base = infinitive.slice(0, infinitive.length - 2)
-  const thirdPersonSingular = subject === 'he' || subject === 'she' || subject === 'it'
-  return subject === 'I' ? base + 'e' :
-    subject === 'you' ? base + 'st' :
+function conjugateDe(subjectEn, infinitive) {
+  const en = infinitive.slice(infinitive.length - 2) === 'en'
+  const base = infinitive.slice(0, infinitive.length - (en ? 2 : 1))
+  const thirdPersonSingular = subjectEn === 'he' || subjectEn === 'she' || subjectEn === 'it'
+  return subjectEn === 'I' ? base + 'e' :
+    subjectEn === 'you' ? base + 'st' :
     thirdPersonSingular ? base + 't' :
     infinitive
 }
@@ -292,7 +201,8 @@ function parse(input) {
             dat: termArray[csvColumns.indexOf('Dat')],
             datAccConcrete: termArray[csvColumns.indexOf('Dat + Acc (Concrete)')],
             datAccAbstract: termArray[csvColumns.indexOf('Dat + Acc (Abstract)')],
-            accVo: termArray[csvColumns.indexOf('Acc + Vo')]
+            accVo: termArray[csvColumns.indexOf('Acc + Vo')],
+            dass: termArray[csvColumns.indexOf('dass')]
            }))
         ).reduce(concat)
       ).reduce(concat)
@@ -314,8 +224,8 @@ function intransitive(wordlist) {
   const verbDe = conjugateDe(subjectEn, verb.de)
 
   return {
-    en: toSentenceCase(`${subjectEn} ${verbEn}.`),
-    de: toSentenceCase(`${subjectDe} ${verbDe}.`)
+    en: constructSentence([subjectEn, verbEn]),
+    de: constructSentence([subjectDe, verbDe])
   }
 }
 
@@ -325,19 +235,21 @@ function accusative(wordlist) {
 
   // choose a random subject, verb, article, and object
   const subjectEn = lodash.sample(Object.keys(subjectsDeMap))
+  const verb = lodash.sample(words.filter(word => word.accAbstract || word.accConcrete)) || defaultAccusative
   const article = lodash.sample(Object.keys(articles))
-  const object = lodash.sample(words.filter(word => word.concrete)) || defaultObj
-  const verb = lodash.sample(accVerbs)
 
-  const articleEn = article === 'a' && /^[aeiou]/.test(object.en) ? 'an' : article
+  // choose an abstract or concrete object based on the verb
+  const object = lodash.sample(words.filter(word => word[verb.accAbstract ? 'abstract' : 'concrete'])) || defaultObj
+
   const subjectDe = subjectsDeMap[subjectEn]
-  const verbEn = verb.en[subjectEn]
-  const verbDe = verb.de[subjectEn]
+  const verbEn = conjugateEn(subjectEn, verb.en)
+  const verbDe = conjugateDe(subjectEn, verb.de)
+  const articleEn = article === 'a' && /^[aeiou]/.test(object.en) ? 'an' : article
   const articleDe = articles[article].acc[object.gender]
 
   return {
-    en: toSentenceCase(`${subjectEn} ${verbEn} ${articleEn} ${object.en}.`),
-    de: toSentenceCase(`${subjectDe} ${verbDe} ${articleDe} ${object.de}.`)
+    en: constructSentence([subjectEn, verbEn, articleEn, object.en]),
+    de: constructSentence([subjectDe, verbDe, articleDe, object.de])
   }
 }
 
@@ -346,28 +258,30 @@ function subordinate(wordlist) {
   const words = parse(wordlist)
 
   // choose a random subject and verb for the independent clause
-  const indSubjectEn = lodash.sample(Object.keys(subjectsDeMap).filter(subject => subject != 'it'))
-  const indVerb = lodash.sample(subordinateVerbs)
-  const indVerbEn = indVerb.en[indSubjectEn]
+  const indSubjectEn = lodash.sample(Object.keys(subjectsDeMap))
+  const indVerb = lodash.sample(words.filter(word => word.dass)) || defaultSubordinateVerb
+  const indVerbEn = conjugateEn(indSubjectEn, indVerb.en)
 
   const indSubjectDe = subjectsDeMap[indSubjectEn]
-  const indVerbDe = indVerb.de[indSubjectEn]
+  const indVerbDe = conjugateDe(indSubjectEn, indVerb.de)
 
   // choose a random subject, verb, article, and object for the subordinate clause
   const subjectEn = lodash.sample(Object.keys(subjectsDeMap))
+  const verb = lodash.sample(words.filter(word => word.accAbstract || word.accConcrete)) || defaultAccusitive
   const article = lodash.sample(Object.keys(articles))
-  const object = lodash.sample(words.filter(word => word.concrete)) || defaultObj
-  const verb = lodash.sample(accVerbs)
 
-  const articleEn = article === 'a' && /^[aeiou]/.test(object.en) ? 'an' : article
+  // choose an abstract or concrete object based on the verb
+  const object = lodash.sample(words.filter(word => word[verb.accAbstract ? 'abstract' : 'concrete'])) || defaultObj
+
   const subjectDe = subjectsDeMap[subjectEn]
-  const verbEn = verb.en[subjectEn]
-  const verbDe = verb.de[subjectEn]
+  const verbEn = conjugateEn(subjectEn, verb.en)
+  const verbDe = conjugateDe(subjectEn, verb.de)
+  const articleEn = article === 'a' && /^[aeiou]/.test(object.en) ? 'an' : article
   const articleDe = articles[article].acc[object.gender]
 
   return {
-    en: toSentenceCase(`${indSubjectEn} ${indVerbEn} that ${subjectEn} ${verbEn} ${articleEn} ${object.en}.`),
-    de: toSentenceCase(`${indSubjectDe} ${indVerbDe}, dass ${subjectDe} ${articleDe} ${object.de} ${verbDe}.`)
+    en: constructSentence([indSubjectEn, indVerbEn, 'that', subjectEn, verbEn, articleEn, object.en]),
+    de: constructSentence([indSubjectDe, indVerbDe, ', dass', subjectDe, articleDe, object.de, verbDe])
   }
 }
 
