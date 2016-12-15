@@ -39,6 +39,9 @@ satz.subordinate(...)
 
 ## Todo
 
+- Replace "V - Acc (Concrete)" field with "Specific Object" field
+- Actually use irregulars
+- Do not cross product Text 3, but correlate them to Text 2
 - plural objects
 - past tense
 
